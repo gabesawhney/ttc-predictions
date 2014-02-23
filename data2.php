@@ -2,6 +2,12 @@
 
 require "settings.php";
 
+$nodb = 0;
+if ($argv[1] == 'nodb') {
+	$nodb = 1;
+	echo "NOT UPDATING DB".PHP_EOL;
+}
+
 $mysqli = new mysqli("localhost",$mysql_user,$mysql_password,$mysql_database);
 if ($mysqli->connect_errno) {
 //        file_put_contents($logfile, $mysqli->connect_error."\n", FILE_APPEND | LOCK_EX);
@@ -65,7 +71,7 @@ stopIdToMysql('6821','501'); //QUEEN at WINEVA
 ////////////////////////////////////////////////////////////
 
 function stopIdToMysql($stopId,$routeTag) {
-	global $mysqli;
+	global $mysqli, $nodb;
 
 	//print "trying ".$stopId."\n";
 	
@@ -74,22 +80,26 @@ function stopIdToMysql($stopId,$routeTag) {
 	$xml = simplexml_load_file($url);
 
 	foreach ($xml->children() as $predic) {
-		if (isset($predic->direction->prediction[1]["minutes"])) {
-			if ($predic->direction->prediction[1]["branch"] == $routeTag) {
+		if (isset($predic->direction->prediction[0]["minutes"])) {
+			if ($predic->direction->prediction[0]["branch"] == $routeTag) {
 
 				$iquery = sprintf("INSERT INTO basic (stopId,minutes,branch, vehicle, dirTag,stamp) VALUES('%s','%s','%s','%s','%s',NOW())",
 					$stopId,
-					$predic->direction->prediction[1]["minutes"],
-					$predic->direction->prediction[1]["branch"],
-					$predic->direction->prediction[1]["vehicle"],
-					$predic->direction->prediction[1]["dirTag"]);
-				if (!$mysqli->query($iquery)) {
-					die("MySQL error: (" . $mysqli->errno . ") " . $mysqli->error);
+					$predic->direction->prediction[0]["minutes"],
+					$predic->direction->prediction[0]["branch"],
+					$predic->direction->prediction[0]["vehicle"],
+					$predic->direction->prediction[0]["dirTag"]);
+				if (!$nodb) {
+					if (!$mysqli->query($iquery)) {
+						die("MySQL error: (" . $mysqli->errno . ") " . $mysqli->error);
+					}
 				}
 			}
 			//print "yes!\n";
 		} else { 
 			print "no\n\n\n\n"; 
+			var_dump($predic);
+			print "\n\n---\n\n";
 			var_dump($xml);
 		}
 	}

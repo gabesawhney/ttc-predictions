@@ -2,7 +2,9 @@
 
 //OUTPUT to csv for Jose
 
-$mysqli = new mysqli("localhost",'nextbus',"n52DA6nW4svx4C7M",'nextbus');
+require "settings.php";
+
+$mysqli = new mysqli("localhost",$mysql_user,$mysql_password,$mysql_database);
 if ($mysqli->connect_errno) {
 //        file_put_contents($logfile, $mysqli->connect_error."\n", FILE_APPEND | LOCK_EX);
 		die($mysqli->connect_error);
